@@ -15,8 +15,8 @@ export default function ChatWindow({ messages, loading }) {
           <p>Welcome to InfoFlow AI. Ask a question about company policies, IT support, or any internal knowledge.</p>
         </div>
       )}
-      {messages.map((msg, idx) => (
-        <Message key={idx} role={msg.role} text={msg.text} sources={msg.sources} />
+      {messages.map((msg) => (
+        <Message key={msg.id} role={msg.role} text={msg.text} sources={msg.sources} />
       ))}
       {loading && (
         <div className="message message-ai">

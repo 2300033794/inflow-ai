@@ -7,8 +7,8 @@ export default function SourceList({ sources }) {
     <div className="source-list">
       <span className="source-label">Sources:</span>
       <ul>
-        {sources.map((src, idx) => (
-          <li key={idx}>{src}</li>
+        {sources.map((src) => (
+          <li key={src}>{src}</li>
         ))}
       </ul>
     </div>

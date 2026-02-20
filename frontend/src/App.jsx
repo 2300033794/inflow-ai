@@ -4,6 +4,9 @@ import ChatWindow from './components/ChatWindow';
 import ChatInput from './components/ChatInput';
 import { sendChat, checkHealth } from './api/api';
 
+const HEALTH_POLL_INTERVAL_MS = 15000;
+let nextMsgId = 0;
+
 export default function App() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -16,23 +19,23 @@ export default function App() {
         .catch(() => setOnline(false));
     };
     poll();
-    const id = setInterval(poll, 15000);
+    const id = setInterval(poll, HEALTH_POLL_INTERVAL_MS);
     return () => clearInterval(id);
   }, []);
 
   const handleSend = useCallback(async (query) => {
-    setMessages((prev) => [...prev, { role: 'user', text: query }]);
+    setMessages((prev) => [...prev, { id: ++nextMsgId, role: 'user', text: query }]);
     setLoading(true);
     try {
       const data = await sendChat(query);
       setMessages((prev) => [
         ...prev,
-        { role: 'ai', text: data.answer, sources: data.sources },
+        { id: ++nextMsgId, role: 'ai', text: data.answer, sources: data.sources },
       ]);
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: 'ai', text: 'Sorry, something went wrong. Please try again.' },
+        { id: ++nextMsgId, role: 'ai', text: 'Sorry, something went wrong. Please try again.' },
       ]);
     } finally {
       setLoading(false);
