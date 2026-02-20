@@ -72,9 +72,40 @@ pip install -r requirements.txt
 ### 2. Configure Environment
 
 ```bash
-cp .env.example .env
-# Edit .env and set your OPENAI_API_KEY
+cp backend/.env.example backend/.env
 ```
+
+The backend reads environment variables from `backend/.env` (loaded by `backend/app/core/config.py`).
+
+1. Open `backend/.env` in your editor.
+2. Set `OPENAI_API_KEY` to a valid key (required).
+3. Keep defaults for other values unless you need to tune behavior.
+
+Example `backend/.env`:
+
+```env
+OPENAI_API_KEY=your-openai-api-key-here
+MODEL_NAME=gpt-3.5-turbo
+VECTOR_DB_PATH=vector_store
+DATA_PATH=data
+CHUNK_SIZE=500
+CHUNK_OVERLAP=50
+TOP_K=5
+EMBEDDING_MODEL=all-MiniLM-L6-v2
+CORS_ORIGINS=*
+```
+
+| Variable | Required | Purpose | Notes |
+|---|---|---|---|
+| `OPENAI_API_KEY` | Yes | OpenAI API authentication | App fails fast if missing/placeholder |
+| `MODEL_NAME` | No | Chat model selection | Default: `gpt-3.5-turbo` |
+| `VECTOR_DB_PATH` | No | FAISS index location | Relative to `backend/` unless absolute path |
+| `DATA_PATH` | No | Document ingestion folder | Default: `data` |
+| `CHUNK_SIZE` | No | Chunk length | Integer |
+| `CHUNK_OVERLAP` | No | Chunk overlap | Integer |
+| `TOP_K` | No | Retrieval result count | Integer |
+| `EMBEDDING_MODEL` | No | Embedding model name | Default: `all-MiniLM-L6-v2` |
+| `CORS_ORIGINS` | No | Allowed frontend origins | Comma-separated list, or `*` |
 
 ### 3. Add Documents
 
