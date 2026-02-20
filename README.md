@@ -9,6 +9,25 @@ InfoFlow AI allows employees to query internal company documents (HR policies, I
 ## Project Structure
 
 ```
+frontend/
+  index.html
+  package.json
+  vite.config.js
+  src/
+    main.jsx
+    App.jsx
+    api/
+      api.js
+    components/
+      ChatWindow.jsx
+      ChatInput.jsx
+      Message.jsx
+      SourceList.jsx
+      Header.jsx
+      StatusIndicator.jsx
+    styles/
+      app.css
+
 backend/
   app/
     main.py               # FastAPI application entry point
@@ -107,8 +126,31 @@ docker build -t infoflow-ai .
 docker run -p 8000:8000 --env OPENAI_API_KEY=your-key infoflow-ai
 ```
 
+## Frontend
+
+The React frontend provides a chat interface for querying the knowledge base.
+
+### Setup
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The dev server starts at `http://localhost:3000` and proxies API requests to the backend at `http://localhost:8000`.
+
+### Build for Production
+
+```bash
+cd frontend
+npm run build
+npm run preview
+```
+
 ## Tech Stack
 
+- **Frontend**: React 18 + Vite + Axios
 - **Backend**: FastAPI + Uvicorn
 - **Vector DB**: FAISS (local)
 - **Embeddings**: sentence-transformers (`all-MiniLM-L6-v2`)
