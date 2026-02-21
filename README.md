@@ -56,7 +56,6 @@ backend/
       helpers.py          # Utility functions
   data/                   # Place your documents here
   requirements.txt
-  .env.example
   Dockerfile
 ```
 
@@ -71,22 +70,14 @@ pip install -r requirements.txt
 
 ### 2. Configure Environment
 
-```bash
-cp backend/.env.example backend/.env
-```
-
 The backend reads environment variables from `backend/.env` (loaded by `backend/app/core/config.py`).
 
-1. Open `backend/.env` in your editor.
-2. Set `OPENAI_API_KEY` to a valid key (required).
-3. Keep defaults for other values unless you need to tune behavior.
-
-Example `backend/.env`:
+Create `backend/.env`:
 
 ```env
-OPENAI_API_KEY=your-openai-api-key-here
-MODEL_NAME=gpt-3.5-turbo
-VECTOR_DB_PATH=vector_store
+OLLAMA_BASE_URL=http://localhost:11434
+MODEL_NAME=llama3.2
+VECTOR_DB_PATH=data/vector_store
 DATA_PATH=data
 CHUNK_SIZE=500
 CHUNK_OVERLAP=50
@@ -97,8 +88,8 @@ CORS_ORIGINS=*
 
 | Variable | Required | Purpose | Notes |
 |---|---|---|---|
-| `OPENAI_API_KEY` | Yes | OpenAI API authentication | App fails fast if missing/placeholder |
-| `MODEL_NAME` | No | Chat model selection | Default: `gpt-3.5-turbo` |
+| `OLLAMA_BASE_URL` | Yes | Base URL for local Ollama server | App fails fast if Ollama is not reachable |
+| `MODEL_NAME` | No | Ollama chat model to use | Default: `llama3.2` |
 | `VECTOR_DB_PATH` | No | FAISS index location | Relative to `backend/` unless absolute path |
 | `DATA_PATH` | No | Document ingestion folder | Default: `data` |
 | `CHUNK_SIZE` | No | Chunk length | Integer |
@@ -107,16 +98,27 @@ CORS_ORIGINS=*
 | `EMBEDDING_MODEL` | No | Embedding model name | Default: `all-MiniLM-L6-v2` |
 | `CORS_ORIGINS` | No | Allowed frontend origins | Comma-separated list, or `*` |
 
-### 3. Add Documents
+### 3. Start Ollama
 
-Place your PDF, DOCX, TXT, or CSV files in `backend/data/`.
+Install Ollama first: https://ollama.com/download
 
-### 4. Ingest Documents
+In one terminal:
 
 ```bash
-cd backend
-curl -X POST http://localhost:8000/ingest
+ollama serve
 ```
+
+In another terminal (one-time model download):
+
+```bash
+ollama pull llama3.2
+```
+
+> Keep Ollama running. The backend validates Ollama availability during startup.
+
+### 4. Add Documents
+
+Place your PDF, DOCX, TXT, or CSV files in `backend/data/`.
 
 ### 5. Run the Server
 
@@ -125,7 +127,13 @@ cd backend
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### 6. Test the Chat Endpoint
+### 6. Ingest Documents
+
+```bash
+curl -X POST http://localhost:8000/ingest
+```
+
+### 7. Test the Chat Endpoint
 
 ```bash
 curl -X POST http://localhost:8000/chat \
@@ -154,8 +162,11 @@ Response:
 ```bash
 cd backend
 docker build -t infoflow-ai .
-docker run -p 8000:8000 --env OPENAI_API_KEY=your-key infoflow-ai
+docker run -p 8000:8000 --env OLLAMA_BASE_URL=http://<ollama-host>:11434 infoflow-ai
 ```
+
+Use `host.docker.internal` as `<ollama-host>` on Docker Desktop (Mac/Windows).  
+For Linux hosts, use your host machine IP or `--network=host`.
 
 ## Frontend
 
@@ -185,5 +196,5 @@ npm run preview
 - **Backend**: FastAPI + Uvicorn
 - **Vector DB**: FAISS (local)
 - **Embeddings**: sentence-transformers (`all-MiniLM-L6-v2`)
-- **LLM**: OpenAI API (`gpt-3.5-turbo`)
+- **LLM**: Ollama (`llama3.2` by default)
 - **File Support**: PDF, DOCX, TXT, CSV
