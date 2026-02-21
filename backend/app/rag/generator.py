@@ -1,20 +1,40 @@
 from typing import Dict, Any, List, Optional
+import json
+import urllib.request
+import urllib.error
 
-from openai import OpenAI
-
-from app.core.config import OPENAI_API_KEY, MODEL_NAME
+from app.core.config import OLLAMA_BASE_URL, MODEL_NAME
 from app.core.logging import logger
 from app.rag.retriever import retrieve
 from app.utils.helpers import truncate_text
 
-_client: Optional[OpenAI] = None
 
+def _call_ollama(prompt: str) -> str:
+    """Call Ollama's /api/chat endpoint directly (no extra dependencies)."""
+    url = f"{OLLAMA_BASE_URL}/api/chat"
+    payload = json.dumps({
+        "model": MODEL_NAME,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "You are InfoFlow AI, an enterprise internal knowledge assistant. "
+                    "Answer questions accurately using only the provided context."
+                ),
+            },
+            {"role": "user", "content": prompt},
+        ],
+        "stream": False,
+        "options": {
+            "temperature": 0.2,
+            "num_predict": 1024,
+        },
+    }).encode("utf-8")
 
-def get_client() -> OpenAI:
-    global _client
-    if _client is None:
-        _client = OpenAI(api_key=OPENAI_API_KEY)
-    return _client
+    req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=120) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+    return data["message"]["content"]
 
 
 def build_prompt(query: str, context_chunks: List[Dict[str, Any]]) -> str:
@@ -32,7 +52,7 @@ def build_prompt(query: str, context_chunks: List[Dict[str, Any]]) -> str:
 
 
 def generate_answer(query: str) -> Dict[str, Any]:
-    """Retrieve context and generate an answer using OpenAI."""
+    """Retrieve context and generate an answer using Ollama (local LLM)."""
     chunks = retrieve(query)
     if not chunks:
         return {
@@ -44,25 +64,9 @@ def generate_answer(query: str) -> Dict[str, Any]:
     sources = list({chunk["source"] for chunk in chunks})
 
     try:
-        client = get_client()
-        response = client.chat.completions.create(
-            model=MODEL_NAME,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are InfoFlow AI, an enterprise internal knowledge assistant. "
-                        "Answer questions accurately using only the provided context."
-                    ),
-                },
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0.2,
-            max_tokens=1024,
-        )
-        answer = response.choices[0].message.content.strip()
+        answer = _call_ollama(prompt)
     except Exception as e:
-        logger.error(f"OpenAI API error: {e}")
+        logger.error(f"Ollama API error: {e}")
         answer = "An error occurred while generating the answer. Please try again later."
 
     return {"answer": answer, "sources": sources}

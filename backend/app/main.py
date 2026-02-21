@@ -1,9 +1,16 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.logging import logger
-from app.core.config import CORS_ORIGINS
+from app.core.config import CORS_ORIGINS, VECTOR_DB_PATH, DATA_PATH, validate_config
 from app.api.routes import chat, ingest, health
+
+# Validate configuration and ensure required directories exist
+validate_config()
+os.makedirs(VECTOR_DB_PATH, exist_ok=True)
+os.makedirs(DATA_PATH, exist_ok=True)
 
 app = FastAPI(
     title="InfoFlow AI",

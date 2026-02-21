@@ -15,8 +15,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app/ app/
 COPY .env.example .env
 
-# Create data directory
-RUN mkdir -p data vector_store
+# Create data directories
+RUN mkdir -p data data/vector_store
 
 EXPOSE 8000
 
